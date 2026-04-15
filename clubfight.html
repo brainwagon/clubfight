@@ -673,26 +673,28 @@
                 return;
             }
             
-            // Before selecting a club - show action preview
+            // Before selecting a club - show action buttons
             if (gameState.gameMode === 'select-hand') {
                 const suits = getGridSuits();
                 const actions = [
-                    { id: 'match', label: 'Match', icon: '🎯', blockedBy: null },
-                    { id: 'sum', label: 'Sum', icon: '➕', blockedBy: null },
-                    { id: 'any', label: 'Any', icon: '✋', blockedBy: null },
-                    { id: 'run', label: 'Run', icon: '🔗', blockedBy: suits.hearts >= 3 ? '♥' : null },
-                    { id: 'updown', label: 'Up/Down', icon: '📊', blockedBy: suits.spades >= 3 ? '♠' : null },
-                    { id: 'line', label: 'Line', icon: '📏', blockedBy: suits.diamonds >= 3 ? '♦' : null }
+                    { id: 'match', label: 'MATCH', desc: 'Remove matching ranks' },
+                    { id: 'sum', label: 'SUM', desc: 'Cards equal value' },
+                    { id: 'any', label: 'ANY', desc: 'Remove any card' },
+                    { id: 'run', label: 'RUN', desc: 'Sequential run', blockedBy: suits.hearts >= 3 ? '♥' : null },
+                    { id: 'updown', label: 'UP/DOWN', desc: 'Higher or Lower', blockedBy: suits.spades >= 3 ? '♠' : null },
+                    { id: 'line', label: 'LINE', desc: 'Row or Column', blockedBy: suits.diamonds >= 3 ? '♦' : null }
                 ];
                 
                 actions.forEach(action => {
-                    const badge = document.createElement('span');
-                    badge.className = 'action-badge' + (action.blockedBy ? ' blocked' : ' available');
-                    badge.innerHTML = `${action.icon} ${action.label}`;
+                    const btn = document.createElement('button');
+                    btn.className = `action-btn ${action.id}` + (action.blockedBy ? '' : '');
                     if (action.blockedBy) {
-                        badge.innerHTML += ` <span class="block-reason">(${action.blockedBy})</span>`;
+                        btn.disabled = true;
                     }
-                    actionsArea.appendChild(badge);
+                    btn.textContent = action.label;
+                    btn.title = action.desc;
+                    btn.style.opacity = action.blockedBy ? '0.5' : '1';
+                    actionsArea.appendChild(btn);
                 });
                 
                 return;
@@ -703,12 +705,12 @@
             }
             
             const actions = [
-                { id: 'match', label: 'Match', desc: 'Remove matching ranks' },
-                { id: 'sum', label: 'Sum', desc: 'Cards equal value' },
-                { id: 'any', label: 'Any', desc: 'Remove any card' },
-                { id: 'run', label: 'Run', desc: 'Sequential run' },
-                { id: 'updown', label: 'Up/Down', desc: 'Higher or Lower' },
-                { id: 'line', label: 'Line', desc: 'Row or Column' }
+                { id: 'match', label: 'MATCH', desc: 'Remove matching ranks' },
+                { id: 'sum', label: 'SUM', desc: 'Cards equal value' },
+                { id: 'any', label: 'ANY', desc: 'Remove any card' },
+                { id: 'run', label: 'RUN', desc: 'Sequential run' },
+                { id: 'updown', label: 'UP/DOWN', desc: 'Higher or Lower' },
+                { id: 'line', label: 'LINE', desc: 'Row or Column' }
             ];
             
             const blockedText = [];
@@ -726,7 +728,7 @@
                 
                 // Special handling for updown when value is 7
                 if (action.id === 'updown' && gameState.clubHand[gameState.selectedHandCard].value === 7) {
-                    btn.textContent = 'Up/Down*';
+                    btn.textContent = 'UP/DOWN*';
                     btn.title = 'Choose UP or DOWN';
                 }
                 
