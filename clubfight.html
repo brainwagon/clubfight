@@ -1448,6 +1448,14 @@
             }
         });
         
+        // Reset game (new position)
+        function resetGame() {
+            localStorage.removeItem('clubfight-state');
+            document.querySelector('.hamburger').classList.remove('active');
+            document.querySelector('.dropdown').classList.remove('show');
+            initGame();
+        }
+        
         // Clear saved state
         function clearSavedState() {
             localStorage.removeItem('clubfight-state');
@@ -1466,6 +1474,7 @@
             <span></span>
         </div>
         <div class="dropdown">
+            <div class="dropdown-item" onclick="resetGame()">Reset Game</div>
             <div class="dropdown-item" onclick="clearSavedState()">Clear Saved State</div>
         </div>
     </nav>
