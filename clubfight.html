@@ -500,8 +500,34 @@
             return `images/${card.id}.png`;
         }
         
+        // Save game state to localStorage
+        function saveGameState() {
+            localStorage.setItem('clubfight-state', JSON.stringify(gameState));
+        }
+        
+        // Load game state from localStorage
+        function loadGameState() {
+            const saved = localStorage.getItem('clubfight-state');
+            if (saved) {
+                try {
+                    gameState = JSON.parse(saved);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+            return false;
+        }
+        
         // Initialize game
         function initGame() {
+            // Try to load saved state first
+            if (loadGameState()) {
+                renderAll();
+                setMessage('Game restored from saved state', 'info');
+                return;
+            }
+            
             const fullDeck = shuffleArray(createFullDeck());
             
             // Separate club cards for club pile
@@ -532,6 +558,7 @@
                 selectedLineTarget: null
             };
             
+            localStorage.removeItem('clubfight-state');
             renderAll();
             setMessage('Select a club card from your hand to begin', 'info');
         }
@@ -780,6 +807,7 @@
                 renderHand();
                 renderActions();
                 setMessage('Select a club card from your hand to begin', 'info');
+                saveGameState();
                 return;
             }
             
@@ -798,6 +826,7 @@
                 renderGrid();
                 renderActions();
                 setMessage(`${card.rank.charAt(0).toUpperCase() + card.rank.slice(1)} of clubs selected. Choose an action.`, 'info');
+                saveGameState();
                 return;
             }
             
@@ -811,6 +840,7 @@
                 renderHand();
                 renderActions();
                 setMessage(`${card.rank.charAt(0).toUpperCase() + card.rank.slice(1)} of clubs selected. Choose an action.`, 'info');
+                saveGameState();
                 return;
             }
         }
@@ -855,6 +885,7 @@
             
             setMessage(instruction, 'info');
             renderGrid();
+            saveGameState();
         }
         
         // Select direction (for updown on 7)
@@ -869,6 +900,7 @@
             setMessage(`Direction: ${direction.toUpperCase()}. Click cards in that direction.`, 'info');
             renderGrid();
             showExecuteButton();
+            saveGameState();
         }
         
         // Select line target and type
@@ -1069,6 +1101,7 @@
                     renderActions();
                     break;
             }
+            saveGameState();
         }
         
         // Execute current selection
@@ -1116,6 +1149,7 @@
             
             renderAll();
             checkGameEnd();
+            saveGameState();
         }
         
         // Check game end conditions
