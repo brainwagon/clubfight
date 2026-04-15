@@ -1120,14 +1120,18 @@
         function checkGameEnd() {
             const activeGridCards = gameState.grid.filter(c => c !== null).length;
             
+            // Win: cleared the grid
             if (activeGridCards === 0) {
                 setMessage('🎉 CONGRATULATIONS! You cleared the grid! 🎉', 'success');
                 return true;
             }
             
-            // Check if out of clubs
-            if (gameState.clubHand.filter(c => c).length < 4 && gameState.clubPile.length === 0) {
-                setMessage('💔 Game Over! No clubs left to refill hand.', 'error');
+            // Lose: grid still has cards and no moves available
+            const suits = getGridSuits();
+            const allBlocked = suits.hearts >= 3 && suits.spades >= 3 && suits.diamonds >= 3;
+            
+            if (activeGridCards > 0 && allBlocked) {
+                setMessage('💔 Game Over! No valid moves remain.', 'error');
                 return true;
             }
             
