@@ -2,6 +2,10 @@
 
 A card-matching puzzle game where you clear a 3x3 grid using your club cards!
 
+## Gameplay
+
+![Club Fight Gameplay](screenshot.png)
+
 ## How to Play
 
 - You have a hand of **club cards** and a **pile of reserve clubs**
