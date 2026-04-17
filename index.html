@@ -1276,6 +1276,7 @@
                     break;
                 case 'updown':
                     const val = selectedCard.value;
+                    gameState.selectedDirection = val < 7 ? 'lower' : 'higher';
                     instruction = 'Click cards ' + (val < 7 ? 'lower' : 'higher') + ' than ' + val;
                     break;
                 case 'line':
