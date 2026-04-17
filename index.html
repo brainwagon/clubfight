@@ -1111,6 +1111,19 @@
                     execBtn.style.flex = '1';
                     execBtn.textContent = `REMOVE (${gameState.selectedGridCards.length})`;
                     execBtn.onclick = executeSelection;
+
+                    // For SUM action, only enable if sum equals target
+                    if (gameState.currentAction === 'sum') {
+                        const handCard = gameState.clubHand[gameState.selectedHandCard];
+                        const sum = gameState.selectedGridCards.reduce((acc, idx) => {
+                            const c = gameState.grid[idx];
+                            return acc + (c ? c.value : 0);
+                        }, 0);
+                        if (sum !== handCard.value) {
+                            execBtn.disabled = true;
+                        }
+                    }
+
                     btnContainer.appendChild(execBtn);
                 }
 
@@ -1515,10 +1528,23 @@
         // Execute current selection
         function executeSelection() {
             const action = gameState.currentAction;
-            
+
             if (gameState.selectedGridCards.length === 0) {
                 setMessage('Select at least one card first!', 'error');
                 return;
+            }
+
+            // For SUM action, verify the sum equals target
+            if (action === 'sum') {
+                const handCard = gameState.clubHand[gameState.selectedHandCard];
+                const sum = gameState.selectedGridCards.reduce((acc, idx) => {
+                    const c = gameState.grid[idx];
+                    return acc + (c ? c.value : 0);
+                }, 0);
+                if (sum !== handCard.value) {
+                    setMessage(`Sum (${sum}) must equal ${handCard.value}!`, 'error');
+                    return;
+                }
             }
             
             // Trigger removal animation
