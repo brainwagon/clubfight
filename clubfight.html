@@ -818,6 +818,30 @@
                 } else if (gameState.gameMode === 'select-action') {
                     const card = gameState.clubHand[gameState.selectedHandCard];
                     setMessage(`${card.rank.charAt(0).toUpperCase() + card.rank.slice(1)} of clubs selected. Choose an action.`, 'info');
+                } else if (gameState.gameMode === 'select-grid') {
+                    const card = gameState.clubHand[gameState.selectedHandCard];
+                    let instruction = '';
+                    switch (gameState.currentAction) {
+                        case 'match': instruction = 'Click all grid cards matching ' + card.rank; break;
+                        case 'sum': instruction = 'Click cards summing to ' + card.value; break;
+                        case 'any': instruction = 'Click any single grid card'; break;
+                        case 'run': instruction = 'Build a sequential run including your ' + card.rank; break;
+                        case 'updown': 
+                            const val = card.value;
+                            if (val === 7 && gameState.selectedDirection) {
+                                instruction = `Direction: ${gameState.selectedDirection.toUpperCase()}. Click cards in that direction.`;
+                            } else {
+                                instruction = 'Click cards ' + (val < 7 ? 'lower' : 'higher') + ' than ' + val;
+                            }
+                            break;
+                        case 'line': instruction = 'Click a grid card matching your rank, then choose row or column'; break;
+                    }
+                    setMessage(instruction, 'info');
+                } else if (gameState.gameMode === 'select-direction') {
+                    const card = gameState.clubHand[gameState.selectedHandCard];
+                    setMessage(`Playing ${card.rank} of clubs. Choose: go UPPER or LOWER?`, 'info');
+                } else if (gameState.gameMode === 'select-line') {
+                    setMessage('Click ROW or COLUMN to clear', 'info');
                 }
                 return;
             }
@@ -853,9 +877,9 @@
                 undoStack: []
             };
             
-            localStorage.removeItem('clubfight-state');
             renderAll();
             setMessage('Select a club card from your hand to begin', 'info');
+            saveGameState(); // Persist the initial state
         }
         
         // Render hand cards
@@ -1527,16 +1551,6 @@
             // Lose: no clubs remaining but grid still has cards
             if (!hasClubs) {
                 setMessage('💔 Game Over! No clubs remaining.', 'error');
-                showGameOverModal(false);
-                return true;
-            }
-            
-            // Lose: grid still has cards and no moves available
-            const suits = getGridSuits();
-            const allBlocked = suits.hearts >= 3 && suits.spades >= 3 && suits.diamonds >= 3;
-            
-            if (activeGridCards > 0 && allBlocked) {
-                setMessage('💔 Game Over! No valid moves remain.', 'error');
                 showGameOverModal(false);
                 return true;
             }
