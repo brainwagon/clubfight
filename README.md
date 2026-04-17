@@ -42,7 +42,7 @@ Some actions are blocked by suit dominance in the grid:
 
 ## Running
 
-Simply open `clubfight.html` in any modern web browser.
+Simply open `index.html` in any modern web browser.
 
 ## License
 
