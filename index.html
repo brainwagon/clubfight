@@ -699,7 +699,8 @@
             currentAction: null,
             selectedDirection: null,
             selectedLineTarget: null, // { index: 0-8, type: 'row'|'col' }
-            undoStack: []      // Previous game states
+            undoStack: [],     // Previous game states
+            variant: 'standard' // 'standard' (2 jokers) or 'easy' (1 joker)
         };
         
         // Push current state to undo stack
@@ -716,6 +717,7 @@
             }
             
             updateUndoUI();
+            updateVariantUI();
         }
 
         // Undo last move
@@ -735,7 +737,7 @@
             saveGameState();
             
             // Close dropdown
-            document.querySelector('.hamburger').classList.remove('active');
+            document.querySelector('.hamburger')?.classList.remove('active');
             document.querySelector('.dropdown').classList.remove('show');
         }
 
@@ -747,9 +749,32 @@
                 btn.style.pointerEvents = gameState.undoStack.length > 0 ? 'auto' : 'none';
             }
         }
+
+        function updateVariantUI() {
+            const checkbox = document.getElementById('easy-variant-checkbox');
+            if (checkbox) {
+                checkbox.checked = gameState.variant === 'easy';
+                // Disable if game has started (undo stack not empty or not in select-hand mode)
+                const hasStarted = gameState.undoStack.length > 0 || gameState.gameMode !== 'select-hand';
+                checkbox.disabled = hasStarted;
+                const container = document.getElementById('variant-toggle-container');
+                if (container) {
+                    container.style.opacity = hasStarted ? '0.5' : '1';
+                    container.title = hasStarted ? 'Cannot change variant after game has started' : '';
+                }
+            }
+        }
+
+        function toggleVariant(isEasy) {
+            const newVariant = isEasy ? 'easy' : 'standard';
+            if (gameState.variant === newVariant) return;
+            
+            gameState.variant = newVariant;
+            resetGame();
+        }
         
         // Create a full deck with jokers
-        function createFullDeck() {
+        function createFullDeck(variant = 'standard') {
             const deck = [];
             for (const suit of SUITS) {
                 for (const rank of RANKS) {
@@ -763,7 +788,9 @@
             }
             // Add jokers
             deck.push({ suit: 'joker', rank: 'black_joker', value: 0, id: 'black_joker' });
-            deck.push({ suit: 'joker', rank: 'red_joker', value: 0, id: 'red_joker' });
+            if (variant === 'standard') {
+                deck.push({ suit: 'joker', rank: 'red_joker', value: 0, id: 'red_joker' });
+            }
             return deck;
         }
         
@@ -797,7 +824,11 @@
             const saved = localStorage.getItem('clubfight-state');
             if (saved) {
                 try {
-                    gameState = JSON.parse(saved);
+                    const loadedState = JSON.parse(saved);
+                    // Ensure all expected properties exist
+                    if (!loadedState.variant) loadedState.variant = 'standard';
+                    if (!loadedState.undoStack) loadedState.undoStack = [];
+                    gameState = loadedState;
                     return true;
                 } catch (e) {
                     return false;
@@ -810,7 +841,6 @@
         function initGame() {
             // Try to load saved state first
             if (loadGameState()) {
-                if (!gameState.undoStack) gameState.undoStack = [];
                 renderAll();
                 // Ensure message matches state
                 if (gameState.gameMode === 'select-hand') {
@@ -846,7 +876,8 @@
                 return;
             }
             
-            const fullDeck = shuffleArray(createFullDeck());
+            const currentVariant = gameState.variant || 'standard';
+            const fullDeck = shuffleArray(createFullDeck(currentVariant));
             
             // Separate club cards for club pile
             const clubCards = fullDeck.filter(card => card.suit === 'clubs');
@@ -874,7 +905,8 @@
                 currentAction: null,
                 selectedDirection: null,
                 selectedLineTarget: null,
-                undoStack: []
+                undoStack: [],
+                variant: currentVariant
             };
             
             renderAll();
@@ -1575,6 +1607,7 @@
             document.getElementById('club-pile-count').textContent = gameState.clubPile.length;
             updateBlockedStatus();
             updateUndoUI();
+            updateVariantUI();
         }
         
         // Keyboard navigation for focus
@@ -1715,6 +1748,12 @@
         <div class="menu-btn" onclick="toggleHamburger()">MENU ▾</div>
         <div class="dropdown">
             <div class="dropdown-item" onclick="undoLastMove()" id="undo-btn-dropdown">Undo Move (0)</div>
+            <div class="dropdown-item" id="variant-toggle-container">
+                <label style="cursor: pointer; display: flex; align-items: center; gap: 10px; margin: 0;">
+                    <input type="checkbox" id="easy-variant-checkbox" onchange="toggleVariant(this.checked)" style="margin: 0; cursor: pointer;">
+                    Easy Variant (1 Joker)
+                </label>
+            </div>
             <div class="dropdown-item" onclick="resetGame()">New Game</div>
             <div class="dropdown-item" onclick="clearSavedState()">Clear Saved State</div>
         </div>
