@@ -39,7 +39,40 @@
             padding: 20px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             border: 3px solid #4a7c59;
+            width: 100%;
             max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Desktop Landscape Layout */
+        @media (min-width: 800px) {
+            .game-container {
+                max-width: 850px;
+                flex-direction: row;
+                align-items: flex-start;
+                justify-content: center;
+                gap: 30px;
+                padding: 30px;
+            }
+
+            .game-main-content {
+                flex: 1;
+                max-width: 380px;
+            }
+
+            .game-grid-content {
+                flex: 0 0 auto;
+                background: rgba(0,0,0,0.1);
+                padding: 15px;
+                border-radius: 12px;
+                border: 1px solid rgba(255,255,255,0.05);
+            }
+
+            .instruction-panel {
+                max-width: 850px;
+            }
         }
         
         .section {
@@ -430,39 +463,29 @@
             font-weight: bold;
         }
         
-        .hamburger {
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            width: 30px;
-            height: 24px;
+        .menu-btn {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: bold;
             cursor: pointer;
-            padding: 5px 0;
+            padding: 6px 12px;
+            border: 1px solid #ffd700;
+            border-radius: 6px;
+            transition: all 0.2s;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
-        .hamburger span {
-            display: block;
-            width: 100%;
-            height: 3px;
-            background: #ffd700;
-            border-radius: 2px;
-            transition: all 0.3s;
+        .menu-btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            color: #fff;
+            border-color: #fff;
         }
         
-        .hamburger:hover span {
-            background: #fff;
-        }
-        
-        .hamburger.active span:nth-child(1) {
-            transform: rotate(45deg) translate(6px, 6px);
-        }
-        
-        .hamburger.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .hamburger.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -7px);
+        .menu-btn:active {
+            transform: scale(0.95);
         }
         
         .dropdown {
@@ -593,45 +616,49 @@
 </head>
 <body>
     <div class="game-container">
-        <!-- Club Hand -->
-        <div class="section">
-            <div class="section-title">
-                Your Club Hand 
-                <span class="count">(<span id="hand-count">4</span>/4)</span>
+        <div class="game-main-content">
+            <!-- Club Hand -->
+            <div class="section">
+                <div class="section-title">
+                    Your Club Hand 
+                    <span class="count">(<span id="hand-count">4</span>/4)</span>
+                </div>
+                <div class="hand-area" id="hand-area"></div>
             </div>
-            <div class="hand-area" id="hand-area"></div>
-        </div>
 
-        <!-- Actions Area -->
-        <div class="section">
-            <div class="section-title" style="padding-top: 10px;">Available Actions</div>
-            <div class="actions-area" id="actions-area"></div>
-            <div class="direction-selector" id="direction-selector" style="display:none;">
-                <button class="direction-btn lower" onclick="selectDirection('lower')">▼ Lower</button>
-                <button class="direction-btn higher" onclick="selectDirection('higher')">▲ Higher</button>
+            <!-- Actions Area -->
+            <div class="section">
+                <div class="section-title" style="padding-top: 10px;">Available Actions</div>
+                <div class="actions-area" id="actions-area"></div>
+                <div class="direction-selector" id="direction-selector" style="display:none;">
+                    <button class="direction-btn lower" onclick="selectDirection('lower')">▼ Lower</button>
+                    <button class="direction-btn higher" onclick="selectDirection('higher')">▲ Higher</button>
+                </div>
+                <div class="line-selector" id="line-selector" style="display:none;">
+                    <button class="line-btn" id="clear-row-btn" onclick="selectLine('row')">Row</button>
+                    <button class="line-btn" id="clear-col-btn" onclick="selectLine('col')">Column</button>
+                </div>
             </div>
-            <div class="line-selector" id="line-selector" style="display:none;">
-                <button class="line-btn" id="clear-row-btn" onclick="selectLine('row')">Row</button>
-                <button class="line-btn" id="clear-col-btn" onclick="selectLine('col')">Column</button>
-            </div>
-        </div>
 
-        <!-- Message Area -->
-        <div class="message-area" id="message-area">Select a club card from your hand to begin</div>
-        
-        <!-- Grid Area -->
-        <div class="section">
-            <div class="section-title">
-                Battle Grid (3×3)
-                <span class="count">Cards: <span id="grid-count">9</span></span>
+            <!-- Message Area -->
+            <div class="message-area" id="message-area">Select a club card from your hand to begin</div>
+            
+            <!-- Info Panel -->
+            <div class="info-panel">
+                <div class="info-item">♣ Club Pile: <span id="club-pile-count">9</span></div>
+                <div class="info-item">📤 Draw Pile: <span id="draw-count">41</span></div>
             </div>
-            <div class="grid-area" id="grid-area"></div>
         </div>
         
-        <!-- Info Panel -->
-        <div class="info-panel">
-            <div class="info-item">♣ Club Pile: <span id="club-pile-count">9</span></div>
-            <div class="info-item">📤 Draw Pile: <span id="draw-count">41</span></div>
+        <div class="game-grid-content">
+            <!-- Grid Area -->
+            <div class="section">
+                <div class="section-title">
+                    Battle Grid (3×3)
+                    <span class="count">Cards: <span id="grid-count">9</span></span>
+                </div>
+                <div class="grid-area" id="grid-area"></div>
+            </div>
         </div>
     </div>
     
@@ -1638,18 +1665,16 @@
         
         // Hamburger menu toggle
         function toggleHamburger() {
-            const hamburger = document.querySelector('.hamburger');
+            const menuBtn = document.querySelector('.menu-btn');
             const dropdown = document.querySelector('.dropdown');
-            hamburger.classList.toggle('active');
             dropdown.classList.toggle('show');
         }
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            const hamburger = document.querySelector('.hamburger');
+            const menuBtn = document.querySelector('.menu-btn');
             const dropdown = document.querySelector('.dropdown');
-            if (!hamburger.contains(e.target) && !dropdown.contains(e.target)) {
-                hamburger.classList.remove('active');
+            if (!menuBtn.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.classList.remove('show');
             }
         });
@@ -1657,7 +1682,6 @@
         // Reset game (new position)
         function resetGame() {
             localStorage.removeItem('clubfight-state');
-            document.querySelector('.hamburger').classList.remove('active');
             document.querySelector('.dropdown').classList.remove('show');
             initGame();
         }
@@ -1665,7 +1689,6 @@
         // Clear saved state
         function clearSavedState() {
             localStorage.removeItem('clubfight-state');
-            document.querySelector('.hamburger').classList.remove('active');
             document.querySelector('.dropdown').classList.remove('show');
             setMessage('Saved state cleared! Refresh to start fresh.', 'info');
         }
@@ -1674,11 +1697,7 @@
     <!-- Navbar -->
     <nav class="navbar">
         <span class="navbar-brand">♣ Club Fight ♣</span>
-        <div class="hamburger" onclick="toggleHamburger()">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
+        <div class="menu-btn" onclick="toggleHamburger()">MENU ▾</div>
         <div class="dropdown">
             <div class="dropdown-item" onclick="undoLastMove()" id="undo-btn-dropdown">Undo Move (0)</div>
             <div class="dropdown-item" onclick="resetGame()">Reset Game</div>
