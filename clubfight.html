@@ -94,6 +94,13 @@
             box-shadow: 0 0 20px 5px #00ff00, 0 12px 25px rgba(0,0,0,0.5);
         }
         
+        /* Keyboard Focus States */
+        .hand-card:focus, .grid-card:focus, .action-btn:focus, .new-game-btn:focus, .dropdown-item:focus {
+            outline: 3px solid #ffd700;
+            outline-offset: 4px;
+            z-index: 10;
+        }
+
         .hand-card.empty {
             background: rgba(0,0,0,0.2);
             border: 2px dashed #4a7c59;
@@ -132,6 +139,28 @@
             transition: all 0.2s;
             position: relative;
         }
+
+        /* Animations */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes cardRemove {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
+
+        .grid-card.invalid {
+            animation: shake 0.2s ease-in-out 0s 2;
+            box-shadow: 0 0 15px 5px #ff4444;
+        }
+
+        .grid-card.removing {
+            animation: cardRemove 0.3s ease-out forwards;
+            pointer-events: none;
+        }
         
         .grid-card.empty {
             background: rgba(0,0,0,0.15);
@@ -152,10 +181,6 @@
         .grid-card.selected {
             box-shadow: 0 0 20px 5px #00ff00;
             transform: scale(1.05);
-        }
-        
-        .grid-card.invalid {
-            box-shadow: 0 0 15px 5px #ff4444;
         }
         
         /* Info Panel */
@@ -180,50 +205,58 @@
         }
         
         /* Actions */
-        .actions-area {
-            display: flex;
+        div.game-container #actions-area {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr 1fr !important;
+            grid-template-rows: auto auto !important;
             gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-            min-height: 40px;
+            width: 100%;
+            margin-bottom: 10px;
         }
         
-        .action-btn {
-            padding: 8px 16px;
+        #actions-area .action-btn {
+            padding: 8px 2px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             transition: all 0.2s;
             text-transform: uppercase;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: #ffd700;
+            color: #1a472a;
         }
         
         .action-btn:disabled {
-            opacity: 0.4;
+            background: rgba(0,0,0,0.3);
+            color: #4a7c59;
+            border: 1px solid #4a7c59;
             cursor: not-allowed;
+            opacity: 0.8;
+            box-shadow: none;
         }
         
-        .action-btn.match { background: #e74c3c; color: white; }
-        .action-btn.sum { background: #3498db; color: white; }
-        .action-btn.any { background: #9b59b6; color: white; }
-        .action-btn.run { background: #c0392b; color: white; }
-        .action-btn.updown { background: #2980b9; color: white; }
-        .action-btn.line { background: #8e44ad; color: white; }
-        .action-btn.execute { background: #27ae60; color: white; padding: 10px 24px; }
+        .action-btn.execute { 
+            background: #27ae60; 
+            color: white; 
+            padding: 10px 24px;
+            box-shadow: 0 0 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .action-btn.cancel {
+            background: #666;
+            color: white;
+        }
         
         .action-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-        }
-        
-        /* Action badges (shown before selecting a club) */
-        .actions-area {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-            min-height: 40px;
         }
         
         .action-badge {
@@ -278,14 +311,18 @@
         
         /* Game Messages */
         .message-area {
-            margin-top: 12px;
-            padding: 10px;
+            margin: 15px 0;
+            padding: 8px 12px;
             background: rgba(0,0,0,0.3);
             border-radius: 8px;
             color: white;
             text-align: center;
             font-size: 13px;
             min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
         
         .message-area.success { background: rgba(46, 204, 113, 0.3); color: #2ecc71; }
@@ -555,8 +592,6 @@
     </style>
 </head>
 <body>
-    <div class="subtitle">Clear the grid with your Club cards!</div>
-    
     <div class="game-container">
         <!-- Club Hand -->
         <div class="section">
@@ -566,6 +601,23 @@
             </div>
             <div class="hand-area" id="hand-area"></div>
         </div>
+
+        <!-- Actions Area -->
+        <div class="section">
+            <div class="section-title" style="padding-top: 10px;">Available Actions</div>
+            <div class="actions-area" id="actions-area"></div>
+            <div class="direction-selector" id="direction-selector" style="display:none;">
+                <button class="direction-btn lower" onclick="selectDirection('lower')">▼ Lower</button>
+                <button class="direction-btn higher" onclick="selectDirection('higher')">▲ Higher</button>
+            </div>
+            <div class="line-selector" id="line-selector" style="display:none;">
+                <button class="line-btn" id="clear-row-btn" onclick="selectLine('row')">Row</button>
+                <button class="line-btn" id="clear-col-btn" onclick="selectLine('col')">Column</button>
+            </div>
+        </div>
+
+        <!-- Message Area -->
+        <div class="message-area" id="message-area">Select a club card from your hand to begin</div>
         
         <!-- Grid Area -->
         <div class="section">
@@ -581,24 +633,6 @@
             <div class="info-item">♣ Club Pile: <span id="club-pile-count">9</span></div>
             <div class="info-item">📤 Draw Pile: <span id="draw-count">41</span></div>
         </div>
-        
-        <!-- Actions Area -->
-        <div class="section">
-            <div class="section-title" style="padding-top: 10px;">Available Actions</div>
-            <div class="actions-area" id="actions-area"></div>
-            <div class="direction-selector" id="direction-selector" style="display:none;">
-                <button class="direction-btn lower" onclick="selectDirection('lower')">▼ Lower</button>
-                <button class="direction-btn higher" onclick="selectDirection('higher')">▲ Higher</button>
-            </div>
-            <div class="line-selector" id="line-selector" style="display:none;">
-                <button class="line-btn" id="clear-row-btn" onclick="selectLine('row')">Row</button>
-                <button class="line-btn" id="clear-col-btn" onclick="selectLine('col')">Column</button>
-            </div>
-            <div class="blocked-info" id="blocked-info"></div>
-        </div>
-        
-        <!-- Message Area -->
-        <div class="message-area" id="message-area">Select a club card from your hand to begin</div>
     </div>
     
     <!-- Instructions -->
@@ -615,8 +649,6 @@
         <p style="margin-top:8px; margin-bottom:5px;"><strong>Jokers:</strong> Have no suit/rank — usable only with Any or Line</p>
         <p style="margin:0;"><strong>Goal:</strong> Clear the grid before running out of clubs!</p>
     </div>
-    
-    <button class="new-game-btn" onclick="initGame()">New Game</button>
 
     <script>
         // Card data
@@ -639,8 +671,55 @@
             gameMode: 'select-hand', // 'select-hand', 'select-action', 'select-grid', 'select-direction', 'select-line'
             currentAction: null,
             selectedDirection: null,
-            selectedLineTarget: null // { index: 0-8, type: 'row'|'col' }
+            selectedLineTarget: null, // { index: 0-8, type: 'row'|'col' }
+            undoStack: []      // Previous game states
         };
+        
+        // Push current state to undo stack
+        function pushToUndoStack() {
+            // Save a deep copy of the current state, but exclude the stack itself to avoid bloat
+            const stateToSave = JSON.parse(JSON.stringify(gameState));
+            delete stateToSave.undoStack;
+            
+            gameState.undoStack.push(stateToSave);
+            
+            // Limit stack size
+            if (gameState.undoStack.length > 10) {
+                gameState.undoStack.shift();
+            }
+            
+            updateUndoUI();
+        }
+
+        // Undo last move
+        function undoLastMove() {
+            if (gameState.undoStack.length === 0) {
+                setMessage('Nothing to undo!', 'error');
+                return;
+            }
+            
+            const prevStack = gameState.undoStack;
+            const prevState = prevStack.pop();
+            
+            gameState = { ...prevState, undoStack: prevStack };
+            
+            renderAll();
+            setMessage('Last move undone.', 'info');
+            saveGameState();
+            
+            // Close dropdown
+            document.querySelector('.hamburger').classList.remove('active');
+            document.querySelector('.dropdown').classList.remove('show');
+        }
+
+        function updateUndoUI() {
+            const btn = document.getElementById('undo-btn-dropdown');
+            if (btn) {
+                btn.textContent = `Undo Move (${gameState.undoStack.length})`;
+                btn.style.opacity = gameState.undoStack.length > 0 ? '1' : '0.5';
+                btn.style.pointerEvents = gameState.undoStack.length > 0 ? 'auto' : 'none';
+            }
+        }
         
         // Create a full deck with jokers
         function createFullDeck() {
@@ -704,8 +783,15 @@
         function initGame() {
             // Try to load saved state first
             if (loadGameState()) {
+                if (!gameState.undoStack) gameState.undoStack = [];
                 renderAll();
-                setMessage('Game restored from saved state', 'info');
+                // Ensure message matches state
+                if (gameState.gameMode === 'select-hand') {
+                    setMessage('Select a club card from your hand to begin', 'info');
+                } else if (gameState.gameMode === 'select-action') {
+                    const card = gameState.clubHand[gameState.selectedHandCard];
+                    setMessage(`${card.rank.charAt(0).toUpperCase() + card.rank.slice(1)} of clubs selected. Choose an action.`, 'info');
+                }
                 return;
             }
             
@@ -736,7 +822,8 @@
                 gameMode: 'select-hand',
                 currentAction: null,
                 selectedDirection: null,
-                selectedLineTarget: null
+                selectedLineTarget: null,
+                undoStack: []
             };
             
             localStorage.removeItem('clubfight-state');
@@ -753,6 +840,7 @@
             for (let i = 0; i < 4; i++) {
                 const card = gameState.clubHand[i];
                 const cardEl = document.createElement('div');
+                cardEl.tabIndex = card ? 0 : -1;
                 
                 if (card) {
                     cardEl.className = 'hand-card';
@@ -765,10 +853,17 @@
                     img.alt = `${card.rank} of ${card.suit}`;
                     img.onerror = () => {
                         img.style.display = 'none';
-                        cardEl.innerHTML = `<span style="font-size:24px;">♣</span>`;
+                        const suitChar = { clubs: '♣', diamonds: '♦', hearts: '♥', spades: '♠' }[card.suit] || '♣';
+                        cardEl.innerHTML = `<div style="font-size:24px; color:${['hearts', 'diamonds'].includes(card.suit) ? '#e74c3c' : '#333'}">${card.rank[0].toUpperCase()}<br>${suitChar}</div>`;
                     };
                     cardEl.appendChild(img);
                     cardEl.addEventListener('click', () => selectHandCard(i));
+                    cardEl.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            selectHandCard(i);
+                        }
+                    });
                 } else {
                     cardEl.className = 'hand-card empty';
                     // Show remaining count in pile
@@ -793,6 +888,7 @@
                 const cardEl = document.createElement('div');
                 cardEl.className = 'grid-card';
                 cardEl.dataset.index = index;
+                cardEl.tabIndex = card ? 0 : -1;
                 
                 if (card) {
                     if (gameState.selectedGridCards.includes(index)) {
@@ -804,7 +900,9 @@
                     img.alt = `${card.rank} of ${card.suit}`;
                     img.onerror = () => {
                         img.style.display = 'none';
-                        cardEl.innerHTML = `<span style="font-size:36px;">${card.rank[0].toUpperCase()}</span>`;
+                        const suitChar = { clubs: '♣', diamonds: '♦', hearts: '♥', spades: '♠' }[card.suit] || '';
+                        const color = ['hearts', 'diamonds'].includes(card.suit) ? '#e74c3c' : '#333';
+                        cardEl.innerHTML = `<div style="color:${color};"><span style="font-size:32px;">${card.rank === '10' ? '10' : card.rank[0].toUpperCase()}</span><br><span style="font-size:24px;">${suitChar}</span></div>`;
                     };
                     cardEl.appendChild(img);
                 } else {
@@ -813,6 +911,12 @@
                 }
                 
                 cardEl.addEventListener('click', () => selectGridCard(index));
+                cardEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        selectGridCard(index);
+                    }
+                });
                 gridArea.appendChild(cardEl);
             });
             
@@ -856,55 +960,90 @@
         // Render actions
         function renderActions() {
             const actionsArea = document.getElementById('actions-area');
-            const blockedInfo = document.getElementById('blocked-info');
             const dirSelector = document.getElementById('direction-selector');
             const lineSelector = document.getElementById('line-selector');
             
             actionsArea.innerHTML = '';
-            blockedInfo.innerHTML = '';
+            actionsArea.style.display = 'grid'; // Force grid layout
             dirSelector.style.display = 'none';
             lineSelector.style.display = 'none';
             
-            if (gameState.gameMode === 'select-direction') {
-                document.getElementById('message-area').textContent = 
-                    `Playing ${gameState.clubHand[gameState.selectedHandCard].rank} of clubs. Choose: go UPPER or LOWER?`;
-                document.getElementById('message-area').className = 'message-area';
-                dirSelector.style.display = 'flex';
-                return;
-            }
-            
-            if (gameState.gameMode === 'select-line') {
-                document.getElementById('message-area').textContent = 
-                    `Click ROW or COLUMN to clear`;
-                document.getElementById('message-area').className = 'message-area';
-                lineSelector.style.display = 'flex';
-                return;
-            }
-            
-            // Before selecting a club - show action buttons
             if (gameState.gameMode === 'select-hand') {
                 const suits = getGridSuits();
                 const actions = [
                     { id: 'match', label: 'MATCH', desc: 'Remove matching ranks' },
                     { id: 'sum', label: 'SUM', desc: 'Cards equal value' },
                     { id: 'any', label: 'ANY', desc: 'Remove any card' },
-                    { id: 'run', label: 'RUN', desc: 'Sequential run', blockedBy: suits.hearts >= 3 ? '♥' : null },
-                    { id: 'updown', label: 'UP/DOWN', desc: 'Higher or Lower', blockedBy: suits.spades >= 3 ? '♠' : null },
-                    { id: 'line', label: 'LINE', desc: 'Row or Column', blockedBy: suits.diamonds >= 3 ? '♦' : null }
+                    { id: 'run', label: 'RUN <span style="color:#ff4444; font-size:125%;">♥</span>', desc: 'Sequential run', blockedBy: suits.hearts >= 3 ? '♥' : null },
+                    { id: 'updown', label: 'UP/DOWN <span style="color:#000; font-size:125%;">♠</span>', desc: 'Higher or Lower', blockedBy: suits.spades >= 3 ? '♠' : null },
+                    { id: 'line', label: 'LINE <span style="color:#ff4444; font-size:125%;">♦</span>', desc: 'Row or Column', blockedBy: suits.diamonds >= 3 ? '♦' : null }
                 ];
                 
                 actions.forEach(action => {
                     const btn = document.createElement('button');
-                    btn.className = `action-btn ${action.id}` + (action.blockedBy ? '' : '');
+                    btn.className = `action-btn ${action.id}`;
                     if (action.blockedBy) {
                         btn.disabled = true;
+                        btn.style.opacity = '0.5';
                     }
-                    btn.textContent = action.label;
+                    btn.innerHTML = action.label;
                     btn.title = action.desc;
-                    btn.style.opacity = action.blockedBy ? '0.5' : '1';
                     actionsArea.appendChild(btn);
                 });
+                return;
+            }
+
+            if (gameState.gameMode === 'select-direction') {
+                dirSelector.style.display = 'flex';
+                return;
+            }
+            
+            if (gameState.gameMode === 'select-line') {
+                lineSelector.style.display = 'flex';
+                return;
+            }
+
+            if (gameState.gameMode === 'select-grid') {
+                // Show current action status
+                const statusDiv = document.createElement('div');
+                statusDiv.style.color = '#ffd700';
+                statusDiv.style.marginBottom = '10px';
+                statusDiv.style.fontWeight = 'bold';
+                statusDiv.style.gridColumn = 'span 3';
+                statusDiv.style.textAlign = 'center';
+                statusDiv.textContent = `Action: ${gameState.currentAction.toUpperCase()}`;
+                actionsArea.appendChild(statusDiv);
                 
+                // Row container for buttons to keep height stable
+                const btnContainer = document.createElement('div');
+                btnContainer.style.gridColumn = 'span 3';
+                btnContainer.style.display = 'flex';
+                btnContainer.style.gap = '8px';
+                btnContainer.style.minHeight = '40px'; // Stable height
+                
+                // Show Execute button if something is selected
+                if (gameState.selectedGridCards.length > 0) {
+                    const execBtn = document.createElement('button');
+                    execBtn.className = 'action-btn execute';
+                    execBtn.style.flex = '1';
+                    execBtn.textContent = `REMOVE (${gameState.selectedGridCards.length})`;
+                    execBtn.onclick = executeSelection;
+                    btnContainer.appendChild(execBtn);
+                }
+
+                // Always show Cancel button
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'action-btn cancel';
+                cancelBtn.style.flex = '1';
+                cancelBtn.textContent = 'CANCEL';
+                cancelBtn.onclick = () => {
+                    gameState.gameMode = 'select-action';
+                    gameState.currentAction = null;
+                    gameState.selectedGridCards = [];
+                    renderAll();
+                };
+                btnContainer.appendChild(cancelBtn);
+                actionsArea.appendChild(btnContainer);
                 return;
             }
             
@@ -916,72 +1055,51 @@
                 { id: 'match', label: 'MATCH', desc: 'Remove matching ranks' },
                 { id: 'sum', label: 'SUM', desc: 'Cards equal value' },
                 { id: 'any', label: 'ANY', desc: 'Remove any card' },
-                { id: 'run', label: 'RUN', desc: 'Sequential run' },
-                { id: 'updown', label: 'UP/DOWN', desc: 'Higher or Lower' },
-                { id: 'line', label: 'LINE', desc: 'Row or Column' }
+                { id: 'run', label: 'RUN <span style="color:#ff4444; font-size:125%;">♥</span>', desc: 'Sequential run' },
+                { id: 'updown', label: 'UP/DOWN <span style="color:#000; font-size:125%;">♠</span>', desc: 'Higher or Lower' },
+                { id: 'line', label: 'LINE <span style="color:#ff4444; font-size:125%;">♦</span>', desc: 'Row or Column' }
             ];
-            
-            const blockedText = [];
             
             actions.forEach(action => {
                 const btn = document.createElement('button');
                 btn.className = `action-btn ${action.id}`;
-                btn.textContent = action.label;
+                btn.innerHTML = action.label;
                 btn.title = action.desc;
-                btn.dataset.action = action.id;
                 
                 if (isActionBlocked(action.id)) {
                     btn.disabled = true;
+                    btn.style.opacity = '0.5';
                 }
                 
                 // Special handling for updown when value is 7
                 if (action.id === 'updown' && gameState.clubHand[gameState.selectedHandCard].value === 7) {
-                    btn.textContent = 'UP/DOWN*';
-                    btn.title = 'Choose UP or DOWN';
+                    btn.innerHTML = 'UP/DOWN* <span style="color:#000; font-size:125%;">♠</span>';
                 }
                 
-                btn.addEventListener('click', () => selectAction(action.id));
+                btn.onclick = (e) => {
+                    console.log(`Action button ${action.id} clicked`);
+                    selectAction(action.id);
+                };
                 actionsArea.appendChild(btn);
             });
-            
-            // Show blocked actions info
-            const blockedActions = actions.filter(a => isActionBlocked(a.id));
-            if (blockedActions.length > 0) {
-                const blockedNames = blockedActions.map(a => {
-                    const suitIcon = { run: '♥', updown: '♠', line: '♦' }[a.id];
-                    return `${a.label} (${suitIcon})`;
-                });
-                blockedInfo.innerHTML = 'Blocked: ' + blockedNames.join(', ');
-            }
         }
-        
+
         // Show execute button when cards are selected
         function showExecuteButton() {
-            if (gameState.gameMode !== 'select-grid' || gameState.selectedGridCards.length === 0) {
-                document.getElementById('actions-area').innerHTML = '';
-                return;
-            }
-            
-            const actionsArea = document.getElementById('actions-area');
-            actionsArea.innerHTML = '';
-            
-            const btn = document.createElement('button');
-            btn.className = 'action-btn execute';
-            btn.textContent = `REMOVE (${gameState.selectedGridCards.length})`;
-            btn.onclick = executeSelection;
-            btn.style.padding = '10px 24px';
-            btn.style.fontSize = '14px';
-            actionsArea.appendChild(btn);
+            renderActions(); // Just call renderActions to update everything
         }
         
         // Select hand card
         function selectHandCard(index) {
+            console.log('selectHandCard called with index:', index, 'Current mode:', gameState.gameMode);
             if (!gameState.clubHand[index]) return;
-            
+
             const isCurrentlySelected = gameState.selectedHandCard === index;
-            
+            console.log('Is currently selected:', isCurrentlySelected);
+
             // If we're in select-action mode and clicking the same card, deselect
             if (gameState.gameMode === 'select-action' && isCurrentlySelected) {
+                console.log('Deselecting card');
                 gameState.selectedHandCard = null;
                 gameState.gameMode = 'select-hand';
                 gameState.selectedGridCards = [];
@@ -991,10 +1109,17 @@
                 saveGameState();
                 return;
             }
-            
+
+            // Push to undo stack before starting a move
+            if (gameState.gameMode === 'select-hand') {
+                console.log('Pushing to undo stack');
+                pushToUndoStack();
+            }
+
             // If we're in the middle of an action (select-grid, select-direction, select-line)
             // and click a different hand card, cancel and switch
             if (['select-action', 'select-grid', 'select-direction', 'select-line'].includes(gameState.gameMode)) {
+                console.log('Switching selected card or cancelling action');
                 gameState.currentAction = null;
                 gameState.selectedDirection = null;
                 gameState.selectedLineTarget = null;
@@ -1013,6 +1138,7 @@
             
             // Normal selection from select-hand mode
             if (gameState.gameMode === 'select-hand') {
+                console.log('Initial card selection from select-hand mode');
                 gameState.selectedHandCard = index;
                 gameState.gameMode = 'select-action';
                 gameState.selectedGridCards = [];
@@ -1028,35 +1154,45 @@
         
         // Select action
         function selectAction(action) {
+            console.log('selectAction called with action:', action, 'Selected hand card index:', gameState.selectedHandCard);
             gameState.currentAction = action;
             gameState.selectedGridCards = [];
             gameState.selectedLineTarget = null;
             
+            if (gameState.selectedHandCard === null) {
+                console.error('Error: No hand card selected when selectAction was called!');
+                return;
+            }
+
             // Handle updown for 7 specially
             if (action === 'updown' && gameState.clubHand[gameState.selectedHandCard].value === 7) {
+                console.log('Special handling for Up/Down on 7');
                 gameState.gameMode = 'select-direction';
-                renderActions();
+                renderAll();
                 return;
             }
             
             gameState.gameMode = 'select-grid';
             
             let instruction = '';
+            const selectedCard = gameState.clubHand[gameState.selectedHandCard];
+            console.log('Selected card for action:', selectedCard.rank, selectedCard.value);
+
             switch (action) {
                 case 'match':
-                    instruction = 'Click all grid cards matching ' + gameState.clubHand[gameState.selectedHandCard].rank;
+                    instruction = 'Click all grid cards matching ' + selectedCard.rank;
                     break;
                 case 'sum':
-                    instruction = 'Click cards summing to ' + gameState.clubHand[gameState.selectedHandCard].value;
+                    instruction = 'Click cards summing to ' + selectedCard.value;
                     break;
                 case 'any':
                     instruction = 'Click any single grid card';
                     break;
                 case 'run':
-                    instruction = 'Build a sequential run including your ' + gameState.clubHand[gameState.selectedHandCard].rank;
+                    instruction = 'Build a sequential run including your ' + selectedCard.rank;
                     break;
                 case 'updown':
-                    const val = gameState.clubHand[gameState.selectedHandCard].value;
+                    const val = selectedCard.value;
                     instruction = 'Click cards ' + (val < 7 ? 'lower' : 'higher') + ' than ' + val;
                     break;
                 case 'line':
@@ -1064,8 +1200,9 @@
                     break;
             }
             
+            console.log('Setting instruction:', instruction);
             setMessage(instruction, 'info');
-            renderGrid();
+            renderAll();
             saveGameState();
         }
         
@@ -1075,12 +1212,8 @@
             gameState.gameMode = 'select-grid';
             gameState.selectedGridCards = [];
             
-            // Hide direction selector
-            document.getElementById('direction-selector').style.display = 'none';
-            
             setMessage(`Direction: ${direction.toUpperCase()}. Click cards in that direction.`, 'info');
-            renderGrid();
-            showExecuteButton();
+            renderAll();
             saveGameState();
         }
         
@@ -1188,6 +1321,8 @@
                         // Check for sequential values
                         for (let i = 1; i < allCards.length; i++) {
                             if (allCards[i].value !== allCards[i-1].value + 1) {
+                                const cardEl = document.querySelector(`.grid-card[data-index="${index}"]`);
+                                if (cardEl) cardEl.classList.add('invalid');
                                 setMessage('Cards must be sequential!', 'error');
                                 renderGrid();
                                 return;
@@ -1210,10 +1345,14 @@
                         }
                         const direction = gameState.selectedDirection;
                         if (direction === 'lower' && gridCard.value >= handCard.value) {
+                            const cardEl = document.querySelector(`.grid-card[data-index="${index}"]`);
+                            if (cardEl) cardEl.classList.add('invalid');
                             setMessage('Must be lower than your card!', 'error');
                             return;
                         }
                         if (direction === 'higher' && gridCard.value <= handCard.value) {
+                            const cardEl = document.querySelector(`.grid-card[data-index="${index}"]`);
+                            if (cardEl) cardEl.classList.add('invalid');
                             setMessage('Must be higher than your card!', 'error');
                             return;
                         }
@@ -1221,10 +1360,14 @@
                         for (const idx of gameState.selectedGridCards) {
                             const c = gameState.grid[idx];
                             if (direction === 'lower' && c.value >= handCard.value) {
+                                const cardEl = document.querySelector(`.grid-card[data-index="${index}"]`);
+                                if (cardEl) cardEl.classList.add('invalid');
                                 setMessage('All cards must follow same direction!', 'error');
                                 return;
                             }
                             if (direction === 'higher' && c.value <= handCard.value) {
+                                const cardEl = document.querySelector(`.grid-card[data-index="${index}"]`);
+                                if (cardEl) cardEl.classList.add('invalid');
                                 setMessage('All cards must follow same direction!', 'error');
                                 return;
                             }
@@ -1294,15 +1437,24 @@
                 return;
             }
             
-            // Remove selected cards
+            // Trigger removal animation
             for (const idx of gameState.selectedGridCards) {
-                gameState.grid[idx] = null;
+                const cardEl = document.querySelector(`.grid-card[data-index="${idx}"]`);
+                if (cardEl) cardEl.classList.add('removing');
             }
             
-            setMessage('Cards removed!', 'success');
-            completeTurn();
+            // Wait for animation
+            setTimeout(() => {
+                // Remove selected cards
+                for (const idx of gameState.selectedGridCards) {
+                    gameState.grid[idx] = null;
+                }
+                
+                setMessage('Cards removed!', 'success');
+                completeTurn();
+            }, 300);
         }
-        
+
         // Complete turn
         function completeTurn() {
             // Play selected hand card
@@ -1381,8 +1533,62 @@
             document.getElementById('draw-count').textContent = gameState.drawPile.length;
             document.getElementById('club-pile-count').textContent = gameState.clubPile.length;
             updateBlockedStatus();
+            updateUndoUI();
         }
         
+        // Keyboard navigation for focus
+        document.addEventListener('keydown', (e) => {
+            if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
+            
+            const active = document.activeElement;
+            if (!active) return;
+            
+            const handCards = Array.from(document.querySelectorAll('.hand-card:not(.empty)'));
+            const gridCards = Array.from(document.querySelectorAll('.grid-area .grid-card:not(.empty)'));
+            const allNavigatable = [...handCards, ...gridCards];
+            
+            if (allNavigatable.length === 0) return;
+            
+            let nextIndex = -1;
+            const currentIndex = allNavigatable.indexOf(active);
+            
+            if (currentIndex === -1) {
+                // Not on a card, start at first hand card or first grid card
+                allNavigatable[0].focus();
+                return;
+            }
+            
+            if (e.key === 'ArrowRight') nextIndex = (currentIndex + 1) % allNavigatable.length;
+            if (e.key === 'ArrowLeft') nextIndex = (currentIndex - 1 + allNavigatable.length) % allNavigatable.length;
+            
+            // Up/Down logic to jump between hand and grid
+            if (e.key === 'ArrowDown') {
+                if (currentIndex < handCards.length) {
+                    // From hand to grid
+                    nextIndex = handCards.length;
+                } else {
+                    // From grid row to next row or wrap
+                    nextIndex = (currentIndex + 3) % allNavigatable.length;
+                }
+            }
+            
+            if (e.key === 'ArrowUp') {
+                if (currentIndex >= handCards.length) {
+                    // From grid to hand
+                    if (currentIndex < handCards.length + 3) nextIndex = 0;
+                    else nextIndex = currentIndex - 3;
+                } else {
+                    // From hand to bottom of grid
+                    nextIndex = allNavigatable.length - 1;
+                }
+            }
+            
+            if (nextIndex !== -1 && allNavigatable[nextIndex]) {
+                e.preventDefault();
+                allNavigatable[nextIndex].focus();
+            }
+        });
+
         // Start game on load
         window.onload = initGame;
         
@@ -1474,6 +1680,7 @@
             <span></span>
         </div>
         <div class="dropdown">
+            <div class="dropdown-item" onclick="undoLastMove()" id="undo-btn-dropdown">Undo Move (0)</div>
             <div class="dropdown-item" onclick="resetGame()">Reset Game</div>
             <div class="dropdown-item" onclick="clearSavedState()">Clear Saved State</div>
         </div>
