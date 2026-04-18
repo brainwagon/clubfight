@@ -1569,19 +1569,19 @@
         function completeTurn() {
             // Play selected hand card
             const usedCard = gameState.clubHand.splice(gameState.selectedHandCard, 1)[0];
-            
-            // Refill hand from club pile
-            while (gameState.clubHand.length < 4 && gameState.clubPile.length > 0) {
-                gameState.clubHand.push(gameState.clubPile.shift());
-            }
-            
-            // Refill grid
+
+            // Refill grid first
             for (let i = 0; i < gameState.grid.length; i++) {
                 if (gameState.grid[i] === null && gameState.drawPile.length > 0) {
                     gameState.grid[i] = gameState.drawPile.shift();
                 }
             }
-            
+
+            // Refill hand from club pile
+            while (gameState.clubHand.length < 4 && gameState.clubPile.length > 0) {
+                gameState.clubHand.push(gameState.clubPile.shift());
+            }
+
             // Reset selection state
             gameState.selectedHandCard = null;
             gameState.selectedGridCards = [];
@@ -1589,7 +1589,7 @@
             gameState.currentAction = null;
             gameState.selectedDirection = null;
             gameState.selectedLineTarget = null;
-            
+
             renderAll();
             checkGameEnd();
             saveGameState();
